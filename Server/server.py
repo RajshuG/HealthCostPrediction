@@ -7,7 +7,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Load the machine learning model
-MODEL_PATH = 'ml_model.pkl'
+MODEL_PATH = os.path.join(os.getcwd(), 'server', 'ml_model.pkl')
 with open(MODEL_PATH, 'rb') as file:
     model = pickle.load(file)
 
