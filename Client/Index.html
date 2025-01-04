@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Insurance</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background: #ffffff;
+            padding: 30px 70px 30px 70px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Health Insurance Cost</h2>
+        <form id="predictionForm">
+            <select id="diabetes" required>
+                <option value="">Diabetes (Yes/No)</option>
+                <option value="1">Yes</option>
+                <option value="0">No</option>
+            </select>
+            <select id="bloodPressure" required>
+                <option value="">Blood Pressure Problems (Yes/No)</option>
+                <option value="1">Yes</option>
+                <option value="0">No</option>
+            </select>
+            <select id="chronicDiseases" required>
+                <option value="">Any Chronic Diseases (Yes/No)</option>
+                <option value="1">Yes</option>
+                <option value="0">No</option>
+            </select>
+            <select id="cancerHistory" required>
+                <option value="">History of Cancer in Family (Yes/No)</option>
+                <option value="1">Yes</option>
+                <option value="0">No</option>
+            </select>
+            <input type="number" id="surgeries" placeholder="Number of Major Surgeries" required>
+            <select id="smoker" required>
+                <option value="">Smoker (Yes/No)</option>
+                <option value="1">Yes</option>
+                <option value="0">No</option>
+            </select>
+            <select id="drinking" required>
+                <option value="">Drinking (Yes/No)</option>
+                <option value="1">Yes</option>
+                <option value="0">No</option>
+            </select>
+            <input type="number" id="age" placeholder="Age (in years)" required>
+            <input type="number" id="height" placeholder="Height (in cm)" required>
+            <input type="number" id="weight" placeholder="Weight (in kg)" required>
+            <button type="submit">Predict</button>
+        </form>
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('predictionForm');
+        const resultDiv = document.getElementById('result');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const age = parseInt(document.getElementById('age').value);
+            const height = parseFloat(document.getElementById('height').value);
+            const weight = parseFloat(document.getElementById('weight').value);
+
+            // Calculate age category
+            let ageCat;
+            if (age >= 17 && age <= 30) {
+                ageCat = 0;
+            } else if (age >= 31 && age <= 50) {
+                ageCat = 1;
+            } else if (age > 50) {
+                ageCat = 2;
+            } else {
+                resultDiv.textContent = "Error: Age must be 17 or older.";
+                return;
+            }
+
+            // Calculate BMI and categorize it
+            const bmi = weight / ((height / 100) ** 2);
+            let bmiClass;
+            if (bmi >= 10 && bmi < 19) {
+                bmiClass = 0;
+            } else if (bmi >= 19 && bmi <= 25) {
+                bmiClass = 1;
+            } else if (bmi > 25 && bmi <= 30) {
+                bmiClass = 2;
+            } else if (bmi > 30) {
+                bmiClass = 3;
+            } else {
+                resultDiv.textContent = "Error: Invalid BMI calculation.";
+                return;
+            }
+
+            const data = {
+                Diabetes: parseInt(document.getElementById('diabetes').value),
+                BloodPressureProblems: parseInt(document.getElementById('bloodPressure').value),
+                AnyChronicDiseases: parseInt(document.getElementById('chronicDiseases').value),
+                HistoryOfCancerInFamily: parseInt(document.getElementById('cancerHistory').value),
+                NumberOfMajorSurgeries: parseFloat(document.getElementById('surgeries').value),
+                Smoker: parseInt(document.getElementById('smoker').value),
+                Drinking: parseInt(document.getElementById('drinking').value),
+                Age_cat: ageCat,
+                BMI_class: bmiClass
+            };
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    resultDiv.textContent = `Prediction: ${result.prediction}`;
+                } else {
+                    const error = await response.json();
+                    resultDiv.textContent = `Error: ${error.error}`;
+                }
+            } catch (error) {
+                resultDiv.textContent = `Error: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>
